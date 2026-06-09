@@ -1,6 +1,6 @@
-# Local Multi-Document RAG Chatbot (Ollama + Pinecone + MiniLM)
+# Local Multi-Document RAG Chatbot (Ollama + Pinecone + MiniLM + Whisper)
 
-A production-quality, terminal-based Retrieval-Augmented Generation (RAG) chatbot in Python. This chatbot allows users to query multiple uploaded PDF documents simultaneously and receive answers that are **strictly grounded** in the document context. It implements absolute grounding rules (refusing to answer when information is missing), multi-level output citations (Document name, Page number, and Paragraph number), confidence scores, conversational session memory, and Pinecone vector database integration.
+A production-quality, terminal-based Retrieval-Augmented Generation (RAG) chatbot in Python. This chatbot allows users to query multiple uploaded PDF documents simultaneously via text or voice, and receive answers that are **strictly grounded** in the document context. It implements absolute grounding rules (refusing to answer when information is missing), multi-level output citations (Document name, Page number, and Paragraph number), confidence scores, conversational session memory, Pinecone vector database integration, and local voice transcription.
 
 ---
 
@@ -10,6 +10,7 @@ A production-quality, terminal-based Retrieval-Augmented Generation (RAG) chatbo
 - **Paragraph & Text Chunking**: Splits extracted text page-wise, separates paragraphs logically, assigns paragraph numbers, and chunks them into character-sized windows (default size 500 characters, 50 characters overlap) while maintaining comprehensive metadata (`document_name`, `page_number`, `paragraph_number`, `chunk_id`).
 - **Embeddings**: Uses **Sentence Transformers** (`all-MiniLM-L6-v2`) to generate 384-dimensional unit-normalized embeddings.
 - **Vector Database**: Implements **Pinecone** (cloud vector database using the `cosine` similarity metric) to index and search vector embeddings in real time.
+- **Voice Transcription**: Captures live microphone recording directly from the terminal and transcribes it in real time using **Faster-Whisper** (Whisper `base` model), utilizing CUDA/GPU acceleration with automatic CPU fallback.
 - **Conversational Memory**: Implements a session message history queue. If history is present, the chatbot uses the local LLM to reformulate the question (resolving pronouns) into a standalone search query.
 - **Relevance Score Check**: Queries Pinecone and discards matches below a similarity threshold (default `0.40`). If all retrieved chunks are below this threshold, the chatbot refuses to answer to prevent hallucination.
 - **LLM Engine**: Queries **Ollama** running `llama3.2` locally using a strict zero-temperature grounding prompt.
@@ -23,6 +24,7 @@ A production-quality, terminal-based Retrieval-Augmented Generation (RAG) chatbo
 - Python 3.11+
 - [Ollama](https://ollama.com/) installed and running locally.
 - A **Pinecone** account, API Key, and an Index created (or let the app create it).
+- A functional **Microphone** input device (for Voice input mode).
 
 ### 2. Configure Environment Variables
 

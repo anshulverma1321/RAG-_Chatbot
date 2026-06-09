@@ -6,6 +6,9 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 
+from src.speech.speech_to_text import SpeechToTextManager
+
+
 from src.pdf_loader import PDFLoader
 from src.chunker import DocumentChunker
 from src.embeddings import EmbeddingManager
@@ -50,6 +53,9 @@ def main():
             vectorstore_dir="vectorstore", 
             dimension=embeddings_mgr.dimension
         )
+        
+        # Initialize Speech-to-Text Manager placeholder (lazy-loaded on demand)
+        stt_mgr = None
     except Exception as e:
         print(f"\n[CRITICAL ERROR] Failed to initialize core model: {e}")
         logging.exception("Core model loading failure")
@@ -183,23 +189,68 @@ def main():
 
     # 4. Interactive Chat Loop
     while True:
+        print("\nChoose input mode:")
+        print("1. Ask by typing")
+        print("2. Ask by voice")
+        print("Type 'exit' to quit or 'clear' to reset chat memory.")
+        
         try:
-            question = input("Ask Question:\n").strip()
+            choice = input("Selection [1 or 2]: ").strip()
         except (KeyboardInterrupt, EOFError):
             print("\nExiting...")
             break
             
-        if not question:
+        if not choice:
             continue
             
-        if question.lower() in ["exit", "quit"]:
+        if choice.lower() in ["exit", "quit"]:
             print("Goodbye!")
             break
             
-        if question.lower() == "clear":
+        if choice.lower() == "clear":
             memory.clear()
             print("Chat memory cleared.")
             print("-" * 40 + "\n")
+            continue
+            
+        question = ""
+        if choice == "1":
+            try:
+                question = input("\nAsk Question (Type):\n").strip()
+            except (KeyboardInterrupt, EOFError):
+                print("\nExiting...")
+                break
+            if not question:
+                continue
+        elif choice == "2":
+            if stt_mgr is None:
+                try:
+                    whisper_model = os.getenv("WHISPER_MODEL", "tiny")
+                    print(f"Loading Faster-Whisper transcription model ({whisper_model})...")
+                    stt_mgr = SpeechToTextManager(model_size=whisper_model)
+                except Exception as stt_init_err:
+                    print(f"\n[SPEECH ERROR] Failed to load speech transcription model: {stt_init_err}")
+                    print("You can still use typed input mode (Option 1).")
+                    continue
+
+            print("\nPress [Enter] to start recording...")
+            try:
+                input()
+                temp_filename = "temp_recording.wav"
+                stt_mgr.record_audio(temp_filename)
+                question = stt_mgr.transcribe_audio(temp_filename)
+                print(f"\nRecognized Text: \"{question}\"")
+            except (KeyboardInterrupt, EOFError):
+                print("\nExiting...")
+                break
+            except Exception as stt_err:
+                print(f"\n[SPEECH ERROR] {stt_err}")
+                continue
+            if not question:
+                print("No recognized text. Please try again.")
+                continue
+        else:
+            print("Invalid selection. Please choose 1 or 2.")
             continue
             
         print("\nThinking...")

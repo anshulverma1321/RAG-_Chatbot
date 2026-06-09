@@ -81,6 +81,11 @@ The project is designed as a modular, object-oriented system in Python. It consi
   * Implements dynamic zero-vector metadata querying to find out if there are existing documents and identify the document name, allowing the CLI's `"reuse existing vector index"` flow to continue working transparently.
 
 ### 2. Retrieval & Generation Pipeline
+* **Voice Transcription Manager (`src/speech/speech_to_text.py`)**: Manages microphone recording and audio transcription.
+  * Captures live user speech in a non-blocking background stream using `sounddevice` until they hit Enter.
+  * Normalizes and saves the PCM audio as a 16-bit 16kHz WAV file.
+  * Feeds the audio into a local **Faster-Whisper** model (base size) for rapid transcription, utilizing GPU CUDA acceleration (falling back to CPU if needed).
+  * Automatically removes the temporary audio file after extracting the query text.
 * **Conversational Memory (`src/memory.py`)**: Maintains a rolling history of the last 5 turns of conversation in the current session.
 * **RAG Chatbot Coordinator (`src/chatbot.py`)**:
   * **Query Reformulation**: When you ask a follow-up question (e.g., *"What was his role?"*), the chatbot sends the chat history and the question to the LLM first. The LLM reformulates it into a standalone question (e.g., *"What was the role of Dr. B. R. Ambedkar?"*).
@@ -123,8 +128,11 @@ python main.py
 
 ### 3. Usage
 1. Enter the comma-separated paths to your PDF files (e.g., `doc1.pdf, doc2.pdf`) when prompted.
-2. Ask questions about the documents' contents.
-3. Type `clear` to reset the chat memory or `exit` to close the program.
+2. Select your input mode from the interactive CLI menu:
+   - Choose `1` to type your query.
+   - Choose `2` to query by voice. Press Enter to start recording, speak your query, and press Enter again to stop.
+3. The chatbot will show the recognized transcription, the grounded answer, the confidence score, and specific sources.
+4. Type `clear` to reset the chat memory or `exit` to close the program.
 
 ---
 
