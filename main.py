@@ -209,19 +209,23 @@ def main():
             print("\nAnswer:")
             print(answer)
             
-            if sources:
-                if len(sources) == 1:
-                    print("\nSource:")
-                else:
-                    print("\nSources:\n")
-                for src in sources:
-                    print(f"Document: {src['document_name']}")
-                    print(f"Page: {src['page_number']}")
-                    print(f"Paragraph: {src['paragraph_number']}")
-                    print()
+            is_fallback = answer in [
+                "This question does not appear to be related to the uploaded documents. Please ask questions based on the uploaded PDFs.",
+                "I could not find this information in the uploaded documents."
+            ]
             
-            if confidence is not None:
-                print(f"Confidence: {confidence}%")
+            if not is_fallback:
+                if confidence is not None:
+                    print("\nConfidence:")
+                    print(f"{confidence}%")
+                
+                if sources:
+                    print("\nSources:\n")
+                    for src in sources:
+                        print(f"* Document: {src['document_name']}")
+                        print(f"  Page: {src['page_number']}")
+                        print(f"  Paragraph: {src['paragraph_number']}")
+                        print()
             print("\n" + "-" * 50 + "\n")
             
         except ConnectionError as ce:

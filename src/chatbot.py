@@ -3,6 +3,7 @@ import requests
 import logging
 from src.retriever import Retriever
 from src.memory import ChatMemory
+from src.prompts.system_prompt import RAG_SYSTEM_PROMPT
 
 logger = logging.getLogger(__name__)
 
@@ -149,16 +150,8 @@ Standalone Question:"""
             )
         retrieved_context = "\n\n".join(context_blocks)
         
-        # 5. strict grounding prompt template
-        prompt = f"""You are a document assistant.
-
-Answer ONLY using the provided context.
-
-Do not use external knowledge.
-
-If the answer is not present in the context, say:
-
-'I could not find this information in the uploaded documents.'
+        # 5. strict grounding prompt template using centralized system prompt
+        prompt = f"""{RAG_SYSTEM_PROMPT}
 
 Context:
 {retrieved_context}
@@ -188,9 +181,16 @@ Question:
         seen_sources = set()
         sources_list = []
         for chunk in relevant_chunks:
-            doc_name = chunk.get("document_name") or chunk.get("source_document") or "Unknown"
-            page_num = chunk.get("page_number", 1)
-            para_num = chunk.get("paragraph_number", 1)
+            doc_name = str(chunk.get("document_name") or chunk.get("source_document") or "Unknown").strip()
+            try:
+                page_num = int(chunk.get("page_number", 1))
+            except (ValueError, TypeError):
+                page_num = 1
+            try:
+                para_num = int(chunk.get("paragraph_number", 1))
+            except (ValueError, TypeError):
+                para_num = 1
+                
             source_key = (doc_name, page_num, para_num)
             if source_key not in seen_sources:
                 seen_sources.add(source_key)
