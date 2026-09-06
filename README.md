@@ -7,6 +7,7 @@ The chatbot allows users to upload and query **multiple PDF documents simultaneo
 
 Unlike generic chatbots, this system **refuses to hallucinate**. If the requested information does not exist inside the uploaded PDFs, the assistant explicitly states that it cannot answer.
 
+
 ---
 
 ## ✨ Features
